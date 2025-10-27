@@ -12,4 +12,4 @@ COPY . .
 EXPOSE 8000
 # Use a minimal entrypoint and CMD
 ENTRYPOINT ["python"]
-CMD ["day02.py"]
+CMD ["app.py"]
