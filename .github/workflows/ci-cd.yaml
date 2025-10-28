@@ -1,0 +1,49 @@
+name: LLMOps CI/CD Pipeline
+
+# Trigger on pushes to the main branch
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-push-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1️⃣ Checkout the repo
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      # 2️⃣ Set up Docker Buildx
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      # 3️⃣ Login to Docker Hub
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      # 4️⃣ Build Docker image
+      - name: Build Docker image
+        run: docker build -t ${{ secrets.DOCKER_USERNAME }}/fastapi-app:latest ./src
+
+      # 5️⃣ Push Docker image to Docker Hub
+      - name: Push Docker image
+        run: docker push ${{ secrets.DOCKER_USERNAME }}/fastapi-app:latest
+
+      # 6️⃣ Scan Docker image with Trivy (HIGH & CRITICAL only)
+      - name: Scan Docker image with Trivy
+        run: trivy image --scanners vuln --severity HIGH,CRITICAL ${{ secrets.DOCKER_USERNAME }}/fastapi-app:latest
+
+      # 7️⃣ Configure kubectl (assumes KUBECONFIG stored as secret)
+      - name: Setup kubectl
+        run: |
+          echo "${{ secrets.KUBECONFIG }}" | base64 --decode > kubeconfig
+          export KUBECONFIG=$PWD/kubeconfig
+
+      # 8️⃣ Deploy to Kubernetes
+      - name: Deploy to Kubernetes
+        run: kubectl apply -f ./kubernetes
