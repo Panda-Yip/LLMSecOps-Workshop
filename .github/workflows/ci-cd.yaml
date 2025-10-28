@@ -56,20 +56,19 @@ jobs:
         run: trivy image --scanners vuln --severity HIGH,CRITICAL --light ${{ secrets.DOCKER_USERNAME }}/fastapi-app:latest
 
 
-      # 7️⃣ Configure kubectl (assumes KUBECONFIG stored as secret)
+      # 8️⃣ Configure kubectl (assumes KUBECONFIG stored as secret)
       - name: Setup kubectl
         run: |
           echo "${{ secrets.KUBECONFIG }}" | base64 --decode > kubeconfig
           export KUBECONFIG=$PWD/kubeconfig
-
-      # 8️⃣ Configure kubectl with your cluster credentials
-      - name: Set up kubeconfig
-        run: |
-          echo "${{ secrets.KUBECONFIG }}" > kubeconfig.txt
-          export KUBECONFIG=kubeconfig.txt
-          kubectl cluster-info
       
-      # 9️⃣ Deploy to Kubernetes
+      - name: Setup kubeconfig
+        run: |
+          echo "${{ secrets.KUBECONFIG }}" | base64 --decode > kubeconfig
+          export KUBECONFIG=$PWD/kubeconfig
+          kubectl cluster-info
+          
+      # 🚀 Deploy to Kubernetes
       - name: Deploy to Kubernetes
         run: |
           kubectl apply -f ./kubernetes --validate=false
