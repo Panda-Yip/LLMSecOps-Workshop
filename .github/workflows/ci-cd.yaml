@@ -35,6 +35,15 @@ jobs:
         run: docker push ${{ secrets.DOCKER_USERNAME }}/fastapi-app:latest
 
       # 6️⃣ Scan Docker image with Trivy (HIGH & CRITICAL only)
+      - name: Install Trivy
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y wget apt-transport-https gnupg lsb-release
+          wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo apt-key add -
+          echo deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main | sudo tee /etc/apt/sources.list.d/trivy.list
+          sudo apt-get update
+          sudo apt-get install -y trivy
+
       - name: Scan Docker image with Trivy
         run: trivy image --scanners vuln --severity HIGH,CRITICAL ${{ secrets.DOCKER_USERNAME }}/fastapi-app:latest
 
